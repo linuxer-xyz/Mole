@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-class mdplus_proc:
+class main:
     def __init__(self, http):
         self._http = http
         pass
