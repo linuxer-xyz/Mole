@@ -41,7 +41,7 @@ def _web_run(port = 8000):
     
 # 主程序
 class main:
-    def __init__(self, dir="./static"):
+    def __init__(self, dir="./"):
         g_web_proc = self._handler
         self._func = {}
         self._handle = {}
