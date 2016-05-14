@@ -4,6 +4,9 @@ from mole.template import template
 from mole import request
 from mole import response
 
+from mole.sessions import get_current_session, authenticator, SessionMiddleware
+from mole.mole import default_app
+
 # 用于判断文件是否慧
 from os import path
 import thread
@@ -21,6 +24,7 @@ def _web_router(url):
     a_data = ""    # 数据
     
     # 构建请求参数
+    a_dict['session'] = get_current_session();
     a_dict['SCRIPT_NAME'] = url;
     for a_key in request.GET.keys():
         a_dict[a_key] = request.GET.get(a_key)
@@ -37,7 +41,8 @@ def _web_router(url):
     return a_data
 
 def _web_run(port = 8000):
-    run(host='localhost', port = port, reloader = True);
+    app = SessionMiddleware(app=default_app(), cookie_key="457rxK3w54tkKiqkfqwfoiQS@kaJSFOo8h",no_datastore=True)
+    run(app=app, host='localhost', port = port, reloader = True);
     
 # 主程序
 class main:
@@ -63,9 +68,9 @@ class main:
     
     # 处理器
     def _handler(self, cgi):
+        
         a_name = cgi["SCRIPT_NAME"]
         
-        print a_name
         if self._func.has_key(a_name):
             a_func = self._func[a_name]
             a_out = a_func(cgi)
