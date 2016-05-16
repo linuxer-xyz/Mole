@@ -42,7 +42,7 @@ def _web_router(url):
 
 def _web_run(port = 8000):
     app = SessionMiddleware(app=default_app(), cookie_key="457rxK3w54tkKiqkfqwfoiQS@kaJSFOo8h",no_datastore=True)
-    run(app=app, host='localhost', port = port, reloader = True);
+    run(app=app, host='0.0.0.0', port = port, reloader = True);
     
 # 主程序
 class main:
