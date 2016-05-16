@@ -25,7 +25,15 @@ class data:
         return cgi['session'].get('username')
         
     def _auth_login(self, cgi):
-        a_dict = {'code': 0};
+        a_dict = {'code': -2};
+        a_user = {'xyz':'suguineng', 'lijincong':'jc_lee'};
+        
+        print cgi['username'], cgi['password']
+        if a_user.has_key(cgi['username']) and a_user[cgi['username']] == cgi['password']:
+        	a_dict['code'] = 0;
+    	else:
+    		a_dict['code'] = -1;
+    		return a_dict;
         
         if cgi['session'].get('username'):
             print("login:" + cgi['session'].get('username')); 
