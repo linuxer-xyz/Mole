@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import demjson
+import json
 import os
 
 class data:
@@ -45,6 +45,7 @@ class data:
     # 获取文件列表
     def _file_list(self, cgi):
         a_dict = {'code':'0', 'data': []}
+        a_json = "";
         
         if not cgi.has_key('param'):
             cgi['param'] = '.*';
@@ -54,12 +55,20 @@ class data:
         
         for a_file in a_lists:
             a_item = {};
+            a_name = a_file.replace("\n","")
+            print a_name.split("/");
+            a_item['id'] = a_name;
             a_item['type'] = "file";
             a_item['text'] = a_file.replace("\n","");
             a_dict['data'].append(a_item);
         
+        if cgi.has_key('dataonly'):
+        	a_json = json.dumps(a_dict['data'], ensure_ascii=False);
+        	print a_json;
+        	return a_json;
+        	
         return a_dict
-         
+    
     # 获取文件内容
     def _file_get(self, cgi):
         a_dict = {'code':'0','name': 'test.txt',  'last':'2016-05-02 00:00:00',  'data': 'hello!world'}
