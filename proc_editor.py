@@ -42,6 +42,46 @@ class data:
             
         return a_dict
     
+    # 转化成树形的
+    def _file_tolvl(self, a_out, a_path, a_isdir): 
+        a_dir = os.path.dirname(a_path)
+        a_base = os.path.basename(a_path)
+        return
+        
+
+    def _flist_dir(self, dtop, dpath):
+
+            
+        a_dlist = dpath.split("/");
+        if not dtop.has_key('children'):
+            dtop['children'] = []
+            
+        if dpath == "":
+            return dtop;
+                      
+        a_cur = dtop
+        for a_dir in a_dlist:
+            a_ctop = None
+            if not a_cur.has_key('children'):
+                a_cur['children'] = []
+            
+            # 判断是否存在 
+            for a_cnode in a_cur['children']:
+                if a_cnode['text'] == a_dir:
+                    a_ctop = a_cnode;
+                    break;
+            
+            if not a_ctop:
+                a_dict = {}
+                a_dict['id'] = ''
+                a_dict['text'] = a_dir
+                a_dict['children'] = []
+                a_ctop = a_dict;
+                a_cur['children'].append(a_ctop)
+            a_cur = a_ctop
+        
+        return a_cur
+        
     # 获取文件列表
     def _file_list(self, cgi):
         a_dict = {'code':'0', 'data': []}
@@ -52,19 +92,33 @@ class data:
         # 打开poen
         a_cmd = os.popen("cd " + self._top +"&& ag -g '" + cgi['param'] + "'");
         a_lists = a_cmd.readlines();
-        
+        a_dict_top = {}
+        a_out_dict = {}
+        a_dict_cur = []
+        a_list_top = {'children':[], 'text':'/', 'id':''}
         for a_file in a_lists:
             a_item = {};
             a_name = a_file.replace("\n","")
-            print a_name.split("/");
             a_item['id'] = a_name;
             a_item['type'] = "file";
             a_item['text'] = a_file.replace("\n","");
             a_dict['data'].append(a_item);
+            
+            # 形成文件层次
+            a_path = a_name;
+            a_dir = os.path.dirname(a_path)
+            a_base = os.path.basename(a_path)
+            a_item['id'] = a_name;
+            a_item['text'] = a_base;
+            if a_dir != "":
+                # alloc路径
+                a_cdir = self._flist_dir(a_list_top, a_dir);
+            else:
+                a_cdir = a_list_top
+            a_cdir['children'].append(a_item)
         
         if cgi.has_key('dataonly'):
-        	a_json = json.dumps(a_dict['data'], ensure_ascii=False);
-        	print a_json;
+        	a_json = json.dumps([a_list_top], ensure_ascii=False);
         	return a_json;
         	
         return a_dict
