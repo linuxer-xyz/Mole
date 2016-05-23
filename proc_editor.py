@@ -30,10 +30,10 @@ class data:
         
         print cgi['username'], cgi['password']
         if a_user.has_key(cgi['username']) and a_user[cgi['username']] == cgi['password']:
-        	a_dict['code'] = 0;
-    	else:
-    		a_dict['code'] = -1;
-    		return a_dict;
+            a_dict['code'] = 0;
+        else:
+            a_dict['code'] = -1;
+            return a_dict;
         
         if cgi['session'].get('username'):
             print("login:" + cgi['session'].get('username')); 
@@ -50,8 +50,6 @@ class data:
         
 
     def _flist_dir(self, dtop, dpath):
-
-            
         a_dlist = dpath.split("/");
         if not dtop.has_key('children'):
             dtop['children'] = []
@@ -60,8 +58,10 @@ class data:
             return dtop;
                       
         a_cur = dtop
+        a_path = ""
         for a_dir in a_dlist:
             a_ctop = None
+            a_path = a_path + "/" + a_dir
             if not a_cur.has_key('children'):
                 a_cur['children'] = []
             
@@ -74,6 +74,7 @@ class data:
             if not a_ctop:
                 a_dict = {}
                 a_dict['id'] = ''
+                a_dict['dir'] = a_path;
                 a_dict['text'] = a_dir
                 a_dict['children'] = []
                 a_ctop = a_dict;
@@ -118,11 +119,16 @@ class data:
             a_cdir['children'].append(a_item)
         
         if cgi.has_key('dataonly'):
-        	a_json = json.dumps([a_list_top], ensure_ascii=False);
-        	return a_json;
-        	
+            a_json = json.dumps([a_list_top], ensure_ascii=False);
+            return a_json;
+            
         return a_dict
-    
+        
+    def _file_oper(self, cgi):
+        a_dict = {'code':'0'}
+        
+        return a_dict;
+            
     # 获取文件内容
     def _file_get(self, cgi):
         a_dict = {'code':'0','name': 'test.txt',  'last':'2016-05-02 00:00:00',  'data': 'hello!world'}
@@ -168,10 +174,10 @@ class data:
             a_stat = os.stat(a_path);
             print("exitsts", a_path, cgi['last'], a_stat.st_mtime);
             if str(a_stat.st_mtime) != cgi['last']:
-            	a_dict['code'] = -1	# 返回失败
-            	a_dict['last'] = str(a_stat.st_mtime);
-            	a_dict['error'] = "file has change"
-            	return a_dict
+                a_dict['code'] = -1    # 返回失败
+                a_dict['last'] = str(a_stat.st_mtime);
+                a_dict['error'] = "file has change"
+                return a_dict
             
         # 保存
         with open(a_path, 'w+b') as f:
