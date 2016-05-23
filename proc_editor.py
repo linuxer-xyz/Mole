@@ -5,9 +5,10 @@ import json
 import os
 
 class data:
-    def __init__(self, http, dir="./raw"):
+    def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
         self._http = http
         self._top = dir
+        self._user = eval(auth);
         
         # 初始化页面 
         self._page()
@@ -26,7 +27,7 @@ class data:
         
     def _auth_login(self, cgi):
         a_dict = {'code': -2};
-        a_user = {'xyz':'suguineng', 'lijincong':'jc_lee'};
+        a_user = self._user;
         
         print cgi['username'], cgi['password']
         if a_user.has_key(cgi['username']) and a_user[cgi['username']] == cgi['password']:
@@ -90,7 +91,7 @@ class data:
         if not cgi.has_key('param'):
             cgi['param'] = '.*';
         # 打开poen
-        a_cmd = os.popen("cd " + self._top +"&& ag -g '" + cgi['param'] + "'");
+        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "'");
         a_lists = a_cmd.readlines();
         a_dict_top = {}
         a_out_dict = {}

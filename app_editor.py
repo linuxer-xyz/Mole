@@ -14,12 +14,27 @@ a_parser.add_option("-p", "--port",
               dest="port",
               default=8002,
               help="Listen Port. default=8002")
+
+a_parser.add_option("-r", "--root",
+              action="store",
+              type="string",
+              dest="root",
+              default="./raw",
+              help="default root [./root]")
+                            
+a_parser.add_option("-u", "--user",
+              action="store",
+              type="string",
+              dest="user",
+              default="{'admin':'admin'}",
+              help="")
+                            
 (a_opt, a_args) = a_parser.parse_args()
               
                       
 myapp = myhttp.main()
 myeditor = mymdplus.main(myapp)
-mydata = cdata.data(myapp)
+mydata = cdata.data(myapp, a_opt.root, a_opt.user)
 
 # 进入循环
 myapp.loop(a_opt.port);
