@@ -9,6 +9,7 @@ class data:
     def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
         self._http = http
         self._top = dir
+        self._skipdir = "upload";
         self._upload = dir + "/upload"
         self._user = eval(auth);
         
@@ -96,7 +97,7 @@ class data:
         if not cgi.has_key('param'):
             cgi['param'] = '.*';
         # 打开poen
-        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "'");
+        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "' --ignore '" +  self._skipdir + "'");
         a_lists = a_cmd.readlines();
         a_dict_top = {}
         a_out_dict = {}
