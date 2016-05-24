@@ -4,6 +4,7 @@
 import json
 import os
 import datetime
+import base64
 
 class data:
     def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
@@ -173,17 +174,30 @@ class data:
     def _img_save(self, cgi):
         a_dict = {'success':'0', 'message':"上传失败", 'url':''};
         
-        uploadfile = cgi['editormd-image-file'];
+        print cgi
+        if cgi.has_key('paste'):
+            a_array =  cgi['editormd-image-file'].split("base64,");
+            if len(a_array) < 2:
+            	return a_dict
+            a_bindata = a_array[1];
+            a_bindata = base64.decodestring(a_bindata)
+            a_name = "paste";
+        else :
+            uploadfile = cgi['editormd-image-file'];
+            a_bindata = uploadfile.file.read()
+            a_name = uploadfile.filename
+
         tnow = datetime.datetime.now()
         parent_path = os.path.join(self._upload, tnow.strftime('%Y%m'))
         if not os.path.exists(parent_path):
             os.makedirs(parent_path)
         
-        m_f=("000"+str(tnow.microsecond/1000))[-3:]
-        filename= tnow.strftime("%d%H%M%S")+m_f+"_" + uploadfile.filename
+        m_f = ("000"+str(tnow.microsecond/1000))[-3:]
+        filename = tnow.strftime("%d%H%M%S")+m_f+"_" + a_name;
         upload_path = os.path.join(parent_path, filename)
-        with open(upload_path, 'w+b') as f:
-            f.write(uploadfile.file.read())
+        with open(upload_path, 'w+t') as f:
+            f.write(a_bindata)
+            f.close();
         url = '%s/%s/%s'%(self._upload, tnow.strftime('%Y%m'), filename)
         return {'success': 1, 'message': '上传成功', 'url': url}
     
