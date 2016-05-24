@@ -16,6 +16,7 @@ class data:
         
     # web请求页面 
     def _page(self):
+    	self._http.regfun("/editor/flist_oper", self._flist_oper);
         self._http.regfun("/editor/file_list", self._file_list);
         self._http.regfun("/editor/file_get", self._file_get);
         self._http.regfun("/editor/file_save", self._file_save);
@@ -97,7 +98,7 @@ class data:
         a_dict_top = {}
         a_out_dict = {}
         a_dict_cur = []
-        a_list_top = {'children':[], 'text':'/', 'id':''}
+        a_list_top = {'children':[], 'text':'/', 'id':'', 'dir':"/"}
         for a_file in a_lists:
             a_item = {};
             a_name = a_file.replace("\n","")
@@ -122,12 +123,47 @@ class data:
         if cgi.has_key('dataonly'):
             a_json = json.dumps([a_list_top], ensure_ascii=False);
             return a_json;
-            
+        a_cmd.close();
         return a_dict
         
-    def _file_oper(self, cgi):
+    def _flist_oper(self, cgi):
         a_dict = {'code':'0'}
+        a_cmd = ""
         
+        a_ret = "";
+        if not self._user_loginin(cgi):
+            a_dict['code'] = -2;
+            return a_dict;
+        
+        # 判断参数合法性
+        if not cgi.has_key('oper'):
+        	a_dict['code'] = -1;
+        	return a_dict;
+        
+        if not cgi.has_key('curdir'):
+        	a_dict['code'] = -1;
+        	return a_dict;
+        
+        a_path = self._top + cgi['curdir']
+        if not os.path.exists(a_path):
+        	a_dict['code'] = -1;
+        	return;
+        
+        if (not cgi.has_key('name')) or (cgi['name'] == ""):
+        	a_dict['code'] = -1;
+        	return;
+        
+        # 添加文件
+        if cgi['oper'] == 'addfile':
+        	a_path = self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+        	a_cmd = "touch " + a_path
+        
+        if cgi['oper'] == 'adddir':
+        	a_path= self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+        	a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/index"
+        
+        a_dict['info'] = os.popen(a_cmd).readlines()
+        print a_cmd
         return a_dict;
             
     # 获取文件内容
