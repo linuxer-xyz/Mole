@@ -3,11 +3,13 @@
 
 import json
 import os
+import datetime
 
 class data:
     def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
         self._http = http
         self._top = dir
+        self._upload = dir + "/upload"
         self._user = eval(auth);
         
         # 初始化页面 
@@ -16,10 +18,11 @@ class data:
         
     # web请求页面 
     def _page(self):
-    	self._http.regfun("/editor/flist_oper", self._flist_oper);
+        self._http.regfun("/editor/flist_oper", self._flist_oper);
         self._http.regfun("/editor/file_list", self._file_list);
         self._http.regfun("/editor/file_get", self._file_get);
         self._http.regfun("/editor/file_save", self._file_save);
+        self._http.regfun("/editor/img_save", self._img_save);
         self._http.regfun("/auth/login", self._auth_login);
         return
     
@@ -137,35 +140,55 @@ class data:
         
         # 判断参数合法性
         if not cgi.has_key('oper'):
-        	a_dict['code'] = -1;
-        	return a_dict;
+            a_dict['code'] = -1;
+            return a_dict;
         
         if not cgi.has_key('curdir'):
-        	a_dict['code'] = -1;
-        	return a_dict;
+            a_dict['code'] = -1;
+            return a_dict;
         
         a_path = self._top + cgi['curdir']
         if not os.path.exists(a_path):
-        	a_dict['code'] = -1;
-        	return;
+            a_dict['code'] = -1;
+            return;
         
         if (not cgi.has_key('name')) or (cgi['name'] == ""):
-        	a_dict['code'] = -1;
-        	return;
+            a_dict['code'] = -1;
+            return;
         
         # 添加文件
         if cgi['oper'] == 'addfile':
-        	a_path = self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
-        	a_cmd = "touch " + a_path
+            a_path = self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+            a_cmd = "touch " + a_path
         
         if cgi['oper'] == 'adddir':
-        	a_path= self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
-        	a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/index"
+            a_path= self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+            a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/index"
         
         a_dict['info'] = os.popen(a_cmd).readlines()
         print a_cmd
         return a_dict;
-            
+    
+    def _img_save(self, cgi):
+        a_dict = {'success':'0', 'message':"上传失败", 'url':''};
+        
+        uploadfile = cgi['editormd-image-file'];
+        tnow = datetime.datetime.now()
+        parent_path = os.path.join(self._upload, tnow.strftime('%Y%m'))
+        if not os.path.exists(parent_path):
+            os.makedirs(parent_path)
+        
+        m_f=("000"+str(tnow.microsecond/1000))[-3:]
+        filename= tnow.strftime("%d%H%M%S")+m_f+"_" + uploadfile.filename
+        upload_path = os.path.join(parent_path, filename)
+        with open(upload_path, 'w+b') as f:
+            f.write(uploadfile.file.read())
+        url = '%s/%s/%s'%(self._upload, tnow.strftime('%Y%m'), filename)
+        return {'success': 1, 'message': '上传成功', 'url': url}
+    
+        return a_dict;
+        
+           
     # 获取文件内容
     def _file_get(self, cgi):
         a_dict = {'code':'0','name': 'test.txt',  'last':'2016-05-02 00:00:00',  'data': 'hello!world'}
