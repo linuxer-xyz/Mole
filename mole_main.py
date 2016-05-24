@@ -81,6 +81,9 @@ class main:
             a_out = static_file(a_name, self._top)
             
         return a_out
+    
+    def static_page(self, a_path):
+        return static_file(a_path, self._top)
         
     def loop(self, port = 8000):
         g_web_dict['proc'] = self._handler

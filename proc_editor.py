@@ -5,13 +5,14 @@ import json
 import os
 import datetime
 import base64
+import hashlib  
 
 class data:
     def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
         self._http = http
         self._top = dir
         self._skipdir = "upload";
-        self._upload = dir + "/upload"
+        self._upload = "upload"
         self._user = eval(auth);
         
         # 初始化页面 
@@ -25,6 +26,7 @@ class data:
         self._http.regfun("/editor/file_get", self._file_get);
         self._http.regfun("/editor/file_save", self._file_save);
         self._http.regfun("/editor/img_save", self._img_save);
+        self._http.regfun("/editor/img_get", self._img_get);
         self._http.regfun("/auth/login", self._auth_login);
         return
     
@@ -171,34 +173,40 @@ class data:
         print a_cmd
         return a_dict;
     
+    def _img_get(self, cgi):
+        # 判断是否存在name
+        if not cgi.has_key('name'):
+            return ""
+        
+        a_path = self._top + cgi['name']
+        print a_path
+        return self._http.static_page(a_path)
+       
     def _img_save(self, cgi):
         a_dict = {'success':'0', 'message':"上传失败", 'url':''};
         
-        print cgi
         if cgi.has_key('paste'):
             a_array =  cgi['editormd-image-file'].split("base64,");
             if len(a_array) < 2:
             	return a_dict
             a_bindata = a_array[1];
             a_bindata = base64.decodestring(a_bindata)
-            a_name = "paste";
         else :
             uploadfile = cgi['editormd-image-file'];
             a_bindata = uploadfile.file.read()
-            a_name = uploadfile.filename
 
-        tnow = datetime.datetime.now()
-        parent_path = os.path.join(self._upload, tnow.strftime('%Y%m'))
+        a_name = hashlib.sha1(a_bindata).hexdigest()  
+        parent_path = self._top + "/" + self._upload
         if not os.path.exists(parent_path):
             os.makedirs(parent_path)
         
-        m_f = ("000"+str(tnow.microsecond/1000))[-3:]
-        filename = tnow.strftime("%d%H%M%S")+m_f+"_" + a_name;
-        upload_path = os.path.join(parent_path, filename)
+        filename = a_name;
+        upload_path = parent_path + "/" + filename
         with open(upload_path, 'w+t') as f:
             f.write(a_bindata)
             f.close();
-        url = '%s/%s/%s'%(self._upload, tnow.strftime('%Y%m'), filename)
+        
+        url = self._upload + "/" + filename;
         return {'success': 1, 'message': '上传成功', 'url': url}
     
         return a_dict;
