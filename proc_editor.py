@@ -202,9 +202,10 @@ class data:
         
         filename = a_name;
         upload_path = parent_path + "/" + filename
-        with open(upload_path, 'w+t') as f:
-            f.write(a_bindata)
-            f.close();
+        if not os.path.exists(upload_path):
+            with open(upload_path, 'w+t') as f:
+                f.write(a_bindata)
+                f.close();
         
         url = self._upload + "/" + filename;
         return {'success': 1, 'message': '上传成功', 'url': url}
