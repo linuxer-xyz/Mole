@@ -8,16 +8,35 @@ import base64
 import hashlib  
 
 class data:
-    def __init__(self, http, dir="./raw", auth="{'admin':'admin'}"):
+    def __init__(self, http, dir="./raw", auth="{'admin':{'pass':'admin', 'role':'admin'}}"):
         self._http = http
+        self._root = dir
         self._top = dir
         self._skipdir = "upload";
         self._upload = "upload"
         self._user = eval(auth);
+        self._pass = "passwd"
         
         # 初始化页面 
         self._page()
         pass
+    
+    def _load_userdb(self):
+        a_path = self._root + "/" + self._pass
+        a_db = ""
+        
+        # 判断路径是否存在 
+        if not os.path.exists(a_path):
+            return
+        
+        # 读取文件,并转化
+        with open(a_path, 'r+t') as f:
+            a_db = f.read(-1)
+        
+        if a_db != "":
+            self._user = eval(a_db)
+            
+        return
         
     # web请求页面 
     def _page(self):
@@ -35,10 +54,24 @@ class data:
         
     def _auth_login(self, cgi):
         a_dict = {'code': -2};
-        a_user = self._user;
+        a_db = self._user;
         
-        print cgi['username'], cgi['password']
-        if a_user.has_key(cgi['username']) and a_user[cgi['username']] == cgi['password']:
+        self._load_userdb();
+        
+        a_user = cgi['username'];
+        a_rpass = cgi['password']
+        a_pass = None
+        a_role = "user"
+        
+        if a_db.has_key(a_user):
+            if isinstance(a_db[a_user], dict) and a_db[a_user].has_key('pass'):
+                a_pass = a_db[a_user]['pass']
+            elif isinstance(a_db[a_user], str):
+                a_pass = a_db[a_user]
+            else:
+                a_pass = a_rpass + "1";
+        
+        if a_pass == a_rpass:
             a_dict['code'] = 0;
         else:
             a_dict['code'] = -1;
@@ -100,7 +133,7 @@ class data:
         if not cgi.has_key('param'):
             cgi['param'] = '.*';
         # 打开poen
-        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "' --ignore '" +  self._skipdir + "'");
+        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "' --ignore '" +  self._skipdir + "' | sort");
         a_lists = a_cmd.readlines();
         a_dict_top = {}
         a_out_dict = {}
@@ -125,7 +158,12 @@ class data:
                 a_cdir = self._flist_dir(a_list_top, a_dir);
             else:
                 a_cdir = a_list_top
-            a_cdir['children'].append(a_item)
+            
+            if a_base == "z_dummy":
+                if len(a_cdir['children']) == 0:
+                    a_cdir['children'].append(a_item)
+            else:
+                a_cdir['children'].append(a_item)
         
         if cgi.has_key('dataonly'):
             a_json = json.dumps([a_list_top], ensure_ascii=False);
@@ -167,7 +205,7 @@ class data:
         
         if cgi['oper'] == 'adddir':
             a_path= self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
-            a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/index"
+            a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/z_dummy"
         
         a_dict['info'] = os.popen(a_cmd).readlines()
         print a_cmd
@@ -188,7 +226,7 @@ class data:
         if cgi.has_key('paste'):
             a_array =  cgi['editormd-image-file'].split("base64,");
             if len(a_array) < 2:
-            	return a_dict
+                return a_dict
             a_bindata = a_array[1];
             a_bindata = base64.decodestring(a_bindata)
         else :
