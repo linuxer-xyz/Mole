@@ -11,7 +11,6 @@ class data:
     def __init__(self, http, dir="./raw", auth="{'admin':{'pass':'admin', 'role':'admin'}}"):
         self._http = http
         self._root = dir
-        self._top = dir
         self._skipdir = "upload";
         self._upload = "upload"
         self._user = eval(auth);
@@ -48,9 +47,41 @@ class data:
         self._http.regfun("/editor/img_get", self._img_get);
         self._http.regfun("/auth/login", self._auth_login);
         return
-    
+
     def _user_loginin(self, cgi):
         return cgi['session'].get('username')
+                
+    def _ftop(self, cgi=None):
+        a_dir = "ano"
+        a_role = "user"
+        
+        a_db = self._user;
+        
+        a_user = self._user_loginin(cgi)
+        if not a_user:
+            a_user = "none"
+        
+        if a_db.has_key(a_user):
+            if isinstance(a_db[a_user], dict) and a_db[a_user].has_key('role'):
+                a_role = a_db[a_user]['role']
+        
+        # admin默认都有权限
+        if a_user == "admin": 
+            a_role = "admin"
+        
+        print a_role,a_user
+        a_dir = a_user;
+        if a_role == "admin":
+            a_dir = self._root
+        else:
+            a_dir = self._root + "/" + a_dir
+        
+        return a_dir
+
+    def _img_top(self):
+        return self._root    
+                
+
         
     def _auth_login(self, cgi):
         a_dict = {'code': -2};
@@ -77,7 +108,7 @@ class data:
             a_dict['code'] = -1;
             return a_dict;
         
-        if cgi['session'].get('username'):
+        if cgi['session'].get('username') == a_user:
             print("login:" + cgi['session'].get('username')); 
         else:
             cgi['session']['username'] = cgi['username'];
@@ -133,7 +164,7 @@ class data:
         if not cgi.has_key('param'):
             cgi['param'] = '.*';
         # 打开poen
-        a_cmd = os.popen("mkdir -p " + self._top + "&& cd " + self._top +"&& ag -g '" + cgi['param'] + "' --ignore '" +  self._skipdir + "' | sort");
+        a_cmd = os.popen("mkdir -p " + self._ftop(cgi) + "&& cd " + self._ftop(cgi) +"&& ag -g '" + cgi['param'] + "' --ignore '" +  self._skipdir + "' | sort");
         a_lists = a_cmd.readlines();
         a_dict_top = {}
         a_out_dict = {}
@@ -189,7 +220,7 @@ class data:
             a_dict['code'] = -1;
             return a_dict;
         
-        a_path = self._top + cgi['curdir']
+        a_path = self._ftop(cgi) + cgi['curdir']
         if not os.path.exists(a_path):
             a_dict['code'] = -1;
             return;
@@ -200,11 +231,11 @@ class data:
         
         # 添加文件
         if cgi['oper'] == 'addfile':
-            a_path = self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+            a_path = self._ftop(cgi) + "/" + cgi['curdir'] + "/" + cgi['name'];
             a_cmd = "touch " + a_path
         
         if cgi['oper'] == 'adddir':
-            a_path= self._top + "/" + cgi['curdir'] + "/" + cgi['name'];
+            a_path= self._ftop(cgi) + "/" + cgi['curdir'] + "/" + cgi['name'];
             a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/z_dummy"
         
         a_dict['info'] = os.popen(a_cmd).readlines()
@@ -216,7 +247,7 @@ class data:
         if not cgi.has_key('name'):
             return ""
         
-        a_path = self._top + cgi['name']
+        a_path = self._img_top() + cgi['name']
         print a_path
         return self._http.static_page(a_path)
        
@@ -234,7 +265,7 @@ class data:
             a_bindata = uploadfile.file.read()
 
         a_name = hashlib.sha1(a_bindata).hexdigest()  
-        parent_path = self._top + "/" + self._upload
+        parent_path = self._img_top() + "/" + self._upload
         if not os.path.exists(parent_path):
             os.makedirs(parent_path)
         
@@ -254,7 +285,7 @@ class data:
     # 获取文件内容
     def _file_get(self, cgi):
         a_dict = {'code':'0','name': 'test.txt',  'last':'2016-05-02 00:00:00',  'data': 'hello!world'}
-        a_path = self._top + "/" + cgi['name'];
+        a_path = self._ftop(cgi) + "/" + cgi['name'];
         
         if not self._user_loginin(cgi):
             a_dict['code'] = -2;
@@ -278,7 +309,7 @@ class data:
     # 文件保存
     def _file_save(self, cgi):
         a_dict = {'code':'0'};
-        a_path = self._top + "/" + cgi['name'];
+        a_path = self._ftop(cgi) + "/" + cgi['name'];
         a_data = cgi['data']
         
         # 未登录,需要重新登录
