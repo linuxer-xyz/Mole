@@ -146,9 +146,12 @@ class data:
             
             if not a_ctop:
                 a_dict = {}
-                a_dict['id'] = ''
+                a_dict['id'] = a_path;
                 a_dict['dir'] = a_path;
+                # a_dict['file'] = a_path;
+                # a_dict['state'] = "closed";
                 a_dict['text'] = a_dir
+                a_dict['type'] = "dir";
                 a_dict['children'] = []
                 a_ctop = a_dict;
                 a_cur['children'].append(a_ctop)
@@ -170,11 +173,13 @@ class data:
         a_out_dict = {}
         a_dict_cur = []
         a_list_top = {'children':[], 'text':'/', 'id':'', 'dir':"/"}
+        
         for a_file in a_lists:
             a_item = {};
             a_name = a_file.replace("\n","")
             a_item['id'] = a_name;
             a_item['type'] = "file";
+            a_dict['file'] = a_name;
             a_item['text'] = a_file.replace("\n","");
             a_dict['data'].append(a_item);
             
@@ -183,6 +188,7 @@ class data:
             a_dir = os.path.dirname(a_path)
             a_base = os.path.basename(a_path)
             a_item['id'] = a_name;
+            a_item['dir'] = "/" + a_dir;
             a_item['text'] = a_base;
             if a_dir != "":
                 # alloc路径
@@ -203,7 +209,7 @@ class data:
         return a_dict
         
     def _flist_oper(self, cgi):
-        a_dict = {'code':'0'}
+        a_dict = {'code':'0', 'info':''}
         a_cmd = ""
         
         a_ret = "";
@@ -223,6 +229,7 @@ class data:
         a_path = self._ftop(cgi) + cgi['curdir']
         if not os.path.exists(a_path):
             a_dict['code'] = -1;
+            a_dict['info'] = "path not exits";
             return;
         
         if (not cgi.has_key('name')) or (cgi['name'] == ""):
@@ -238,6 +245,10 @@ class data:
             a_path= self._ftop(cgi) + "/" + cgi['curdir'] + "/" + cgi['name'];
             a_cmd = "mkdir -p " + a_path + "; touch " + a_path + "/z_dummy"
         
+        if cgi['oper'] == 'del':
+            a_path = self._ftop(cgi) + "/" + cgi['name'];
+            a_cmd = "rm -rf " + a_path; # TODO 增加回收站功能
+            
         a_dict['info'] = os.popen(a_cmd).readlines()
         print a_cmd
         return a_dict;
