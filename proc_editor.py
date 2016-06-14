@@ -149,7 +149,7 @@ class data:
                 a_dict['id'] = a_path;
                 a_dict['dir'] = a_path;
                 # a_dict['file'] = a_path;
-                # a_dict['state'] = "closed";
+                a_dict['state'] = "closed";
                 a_dict['text'] = a_dir
                 a_dict['type'] = "dir";
                 a_dict['children'] = []
@@ -190,6 +190,7 @@ class data:
             a_item['id'] = a_name;
             a_item['dir'] = "/" + a_dir;
             a_item['text'] = a_base;
+            a_item['file'] = a_name;
             if a_dir != "":
                 # alloc路径
                 a_cdir = self._flist_dir(a_list_top, a_dir);
